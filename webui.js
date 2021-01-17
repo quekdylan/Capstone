@@ -110,9 +110,9 @@ function createJoystick() {
 
 window.onload = function () {
     // determine robot address automatically
-    //robot_IP = location.hostname;
+    robot_IP = location.hostname;
     // set robot address statically
-    robot_IP = "35.187.249.222";
+    //robot_IP = "35.187.249.222";
 
     // // Init handle for rosbridge_websocket
     ros = new ROSLIB.Ros({
