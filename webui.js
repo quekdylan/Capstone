@@ -110,20 +110,41 @@ function createJoystick() {
 
 window.onload = function () {
     // determine robot address automatically
+<<<<<<< HEAD
     robot_IP = location.hostname;
     // set robot address statically
     //robot_IP = "35.187.249.222";
+=======
+    //robot_IP = location.hostname;
+    // set robot address statically
+    robot_IP = "192.168.68.126";
+>>>>>>> index
 
     // // Init handle for rosbridge_websocket
     ros = new ROSLIB.Ros({
         url: "ws://" + robot_IP + ":9090"
     });
 
+<<<<<<< HEAD
     initVelocityPublisher();
     // get handle for video placeholder
     video = document.getElementById('video');
     // Populate video source 
     video.src = "http://" + robot_IP + ":8080/stream?topic=/camera/rgb/image_raw&type=mjpeg&quality=80";
+=======
+    ros.on('connection', function() {
+        console.log('Connection successful!');
+        document.getElementById('connected').style.display = 'inline';
+        document.getElementById('disconnected').style.display = 'none';
+    });
+
+    // get handle for video placeholder
+    video = document.getElementById('video');
+    // Populate video source 
+    video.src = "http://" + robot_IP + ":8080/stream?topic=jetbot_camera";
+    createJoystick();
+    initTeleopKeyboard();
+>>>>>>> index
     video.onload = function () {
         // joystick and keyboard controls will be available only when video is correctly loaded
         createJoystick();
