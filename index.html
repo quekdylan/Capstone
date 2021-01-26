@@ -56,12 +56,13 @@
       else {
         robot_IP = "localhost";
       }
+      //robot_IP = "192.168.68.126";
 
-      robot_IP = "192.168.68.126";
+      console.log(robot_IP);
 
       // // Init handle for rosbridge_websocket
       ros = new ROSLIB.Ros({
-          url: "wss://" + robot_IP + ":9090"
+          url: "ws://" + robot_IP + ":9090"
       });
 
       var wagon_capacity = new ROSLIB.Topic({
