@@ -61,7 +61,7 @@
 
       // // Init handle for rosbridge_websocket
       ros = new ROSLIB.Ros({
-          url: "ws://" + robot_IP + ":9090"
+          url: "wss://" + robot_IP + ":9090"
       });
 
       var wagon_capacity = new ROSLIB.Topic({
@@ -127,13 +127,13 @@
       // Draw the chart and set the chart values
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-        ['Task', 'Hours per Day'],
-        ['Work', 8],
-        ['Friends', 2],
-        ['Eat', 2],
-        ['TV', 2],
-        ['Gym', 2],
-        ['Sleep', 8]
+        ['Item', 'Quantity'],
+        ['Plastic Bottle', 8],
+        ['Tissue', 2],
+        ['Metal can', 2],
+        ['Paper', 2],
+        ['Plastic bag', 2],
+        ['Others', 8]
         ]);
         
         var options = {
