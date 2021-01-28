@@ -15,6 +15,15 @@
   var manager;
   var ros;
 
+  function set_ip(){
+    if(event.key == 'Enter') {
+      var ip = document.querySelector("#ip").value;
+      var url = window.location.href.split('?')[0];
+      url = (url + "?ip=" + ip);
+      window.location.href = url;
+    }
+  }
+
   function emergency_stop() {
     
     var dashboard = new ROSLIB.Topic({
@@ -80,7 +89,6 @@
           console.log('Connection closed');
           document.getElementById('connecting').style.display = 'none';
           document.getElementById('connected').style.display = 'none';
-          document.getElementById('ip').innerHTML = 'To change robot IP, add ?ip={ip} to URL';
           document.getElementById('disconnected').style.display = 'inline';
       });
 
@@ -88,7 +96,6 @@
           console.log('Error');
           document.getElementById('connecting').style.display = 'none';
           document.getElementById('connected').style.display = 'none';
-          document.getElementById('ip').innerHTML = error;
           document.getElementById('disconnected').style.display = 'inline';
       });
 
@@ -96,7 +103,6 @@
           console.log('Connection successful!');
           document.getElementById('connecting').style.display = 'none';
           document.getElementById('connected').style.display = 'inline';
-          document.getElementById('ip').innerHTML = 'IP: ' + robot_IP;
           document.getElementById('disconnected').style.display = 'none';
 
             // get handle for video placeholder
@@ -182,7 +188,16 @@
                 <button type="button" class="btn btn-danger" id='disconnected' disabled data-bs-toggle="tooltip" style='display: none;'>Not Connected</button>
               </div>
           </div>
-          <span id='ip' style='color: grey; margin-left: 5px;'>To change robot IP, add ?ip={ip} to URL</span>
+          <button type="button" class="btn btn-link" onclick="$('.ip_modal').modal('show')">Change IP</button>
+          <div class="modal fade ip_modal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+              <div class="modal-content" style="background-color: #111;">
+                <div class="modal-body">
+                  <input class="form-control bg-dark" id="ip" style="color: #aaa;" placeholder="192.168.0.1" onkeydown="set_ip(this)">
+                </div>
+              </div>
+            </div>
+          </div>
       </ul>
   </nav>
 
