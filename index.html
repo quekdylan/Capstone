@@ -1,8 +1,11 @@
 <title>Capstone Dashboard</title>
+<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
 <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script type="text/javascript" src="http://static.robotwebtools.org/EaselJS/current/easeljs.min.js"></script>
 <script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 <script src="https://static.robotwebtools.org/keyboardteleopjs/current/keyboardteleop.min.js"></script>
 <script src="//yoannmoinet.github.io/nipplejs/javascripts/nipplejs.js"></script>
+<script type="text/javascript" src="http://static.robotwebtools.org/ros2djs/current/ros2d.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
@@ -14,6 +17,7 @@
   var robot_IP;
   var manager;
   var ros;
+  var items = {};
 
   function set_ip(){
     if(event.key == 'Enter') {
@@ -54,8 +58,7 @@
   }
 
   window.onload = function () {
-      // determine robot address automatically
-      //robot_IP = location.hostname;
+      // robot_IP = location.hostname;
       // set robot address statically
       const urlParams = new URLSearchParams(window.location.search);
       const myParam = urlParams.get('ip');
@@ -63,26 +66,13 @@
         robot_IP = myParam;
       }
       else {
-        robot_IP = "localhost";
+        robot_IP = "192.168.52.8"; //default
       }
-      //robot_IP = "192.168.68.126";
-
       console.log(robot_IP);
 
-      // // Init handle for rosbridge_websocket
+      // Init handle for rosbridge_websocket
       ros = new ROSLIB.Ros({
           url: "ws://" + robot_IP + ":9090"
-      });
-
-      var wagon_capacity = new ROSLIB.Topic({
-            ros : ros,
-            name : '/wagon_capacity',
-            messageType : 'std_msgs/Int32'
-        });
-
-      wagon_capacity.subscribe(function(message) {
-          document.getElementById('capacity').style.width = String(message.data) + "%";
-          console.log('Received message on ' + wagon_capacity.name + ': ' + message.data);
       });
 
       ros.on('close', function() {
@@ -105,68 +95,100 @@
           document.getElementById('connected').style.display = 'inline';
           document.getElementById('disconnected').style.display = 'none';
 
-            // get handle for video placeholder
+          // get handle for video placeholder
           video1 = document.getElementById('video1');
           // Populate video source 
           video1.src = "http://" + robot_IP + ":8080/stream?topic=jetbot_camera";
           video1.onload = function () {
             // onload
+            
           };
-          // get handle for video placeholder
-          video2 = document.getElementById('video2');
-          // Populate video source 
-          video2.src = "http://" + robot_IP + ":8080/stream?topic=scan";
+          // Create the main viewer.
+          var viewer = new ROS2D.Viewer({
+            divID : 'map',
+            width : $(window).width()/2,
+            height : $('#body').height()
+          });
+
+          // Setup the map client.
+          var gridClient = new ROS2D.OccupancyGridClient({
+            ros : ros,
+            rootObject : viewer.scene,
+            continuous: true
+          });
+
+          // Scale the canvas to fit to the map
+          gridClient.on('change', function(){
+            viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
+            viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
+          });
+
+          // Subscribe to wagon capacity
+          var wagon_capacity = new ROSLIB.Topic({
+            ros : ros,
+            name : '/wagon_capacity',
+            messageType : 'std_msgs/Int32'
+          });
+
+          wagon_capacity.subscribe(function(message) {
+            document.getElementById('capacity').style.width = String(message.data) + "%";
+            console.log('Received message on ' + wagon_capacity.name + ': ' + message.data);
+          });
+
+          // Subscribe to wagon contents
+          var wagon_contents = new ROSLIB.Topic({
+            ros : ros,
+            name : '/wagon_contents',
+            messageType : 'std_msgs/String'
+          });
+
+          wagon_contents.subscribe(function(message) {
+            item = String(message.data);
+            if(item in items) {
+              items[item] += 1
+            }
+            else {
+              items[item] = 1
+            }
+            console.log('Received message on ' + wagon_contents.name + ': ' + message.data);
+            $('#toast_wc_content').html("Detected " + item);
+            $('.toast_wc').toast({delay: 2000});
+            $('.toast_wc').toast('show');
+          });
       });
   }
 
   function view_metrics(){
-    var wagon_contents = new ROSLIB.Topic({
-        ros : ros,
-        name : '/wagon_contents',
-        messageType : 'std_msgs/String'
-    });
+    // Load wagon contents
+    contents = [['Item', 'Quantity']];
+    //items = {"Plastic Bottle": 8, "Tissue": 2};
+    for (var item in items) {
+      contents.push([item, items[item]]);
+    };
+    console.log(contents);
 
-    wagon_contents.subscribe(function(message) {
-      // Load google charts
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
+    // Load google charts
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
 
-      // Draw the chart and set the chart values
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-        ['Item', 'Quantity'],
-        ['Plastic Bottle', 8],
-        ['Tissue', 2],
-        ['Metal can', 2],
-        ['Paper', 2],
-        ['Plastic bag', 2],
-        ['Others', 8]
-        ]);
-        
-        var options = {
-          'title':'All items collected', 
-          'width':550, 
-          'height':400, 
-          'chartArea':{'width':'100%','height':'80%'},
-          'backgroundColor': '#111', 
-          'titleTextStyle': {'color': 'white', 'fontSize' : 16},
-          'legend': {'textStyle': {'color': 'white'}}
-        };
+    // Draw the chart and set the chart values
+    function drawChart() {
+      var data = google.visualization.arrayToDataTable(contents);
+      var options = {
+        'title':'All items collected', 
+        'width':550, 
+        'height':400, 
+        'chartArea':{'width':'100%','height':'80%'},
+        'backgroundColor': '#111', 
+        'titleTextStyle': {'color': 'white', 'fontSize' : 16},
+        'legend': {'textStyle': {'color': 'white'}}
+      };
 
-        // Display the chart inside the <div> element with id="piechart"
-        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
-        chart.draw(data, options);
-      }
-      $('.metrics_modal').modal('show')
-
-      console.log('Received message on ' + wagon_contents.name + ': ' + message.data);
-    });
-
-    var msg = new ROSLIB.Message({
-        data : "request"
-    });
-    wagon_contents.publish(msg);
-
+      // Display the chart inside the <div> element with id="piechart"
+      var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+      chart.draw(data, options);
+    }
+    $('.metrics_modal').modal('show')
   }
 </script>
 
@@ -193,6 +215,13 @@
             <div class="modal-dialog modal-sm">
               <div class="modal-content" style="background-color: #111;">
                 <div class="modal-body">
+                  <p style='color: #999'>On https, ensure 'Insecure content' is allowed</p>
+                  <p style='color: #999'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock-fill" viewBox="0 0 16 20" preserveAspectRatio="none">
+                      <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                    </svg>
+                     > Site Settings > Insecure Content
+                  </p>
                   <input class="form-control bg-dark" id="ip" style="color: #aaa;" placeholder="192.168.0.1" onkeydown="set_ip(this)">
                 </div>
               </div>
@@ -217,9 +246,18 @@
     </div>
   </div>
 
+  <div style="position: absolute; top: 120px; left: 10px; z-index: 999;">
+    <div class="toast d-flex align-items-center text-white bg-dark border-0 toast_wc" role="alert" aria-live="assertive" aria-atomic="true" style="width: fit-content;">
+      <button type="button" class="btn-close ms-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
+      <div class="toast-body" id="toast_wc_content">
+        Item detected
+      </div>
+    </div>
+  </div>
+
   <div style='display: flex; flex-flow: row wrap;'>
     <!-- CAMERA -->
-    <div style='width: 50%; position: relative;'>
+    <div style='width: 50%; position: relative;' id='body'>
         <span style='position: absolute; top: 10px; left: 10px;' class='badge bg-info'>CAMERA</span>
         <span style='position: absolute; top: 10px; left: 88px;' class='badge bg-dark'>/camera</span>
         <img src="img/no_signal.png" class="p-1 bg-dark" alt="" id="video1" style='width: 100%;' />
@@ -227,8 +265,9 @@
     <!-- LIDAR -->
     <div style='width: 50%; position: relative;'>
         <span style='position: absolute; top: 10px; left: 10px;' class='badge bg-info'>LIDAR</span>
-        <span style='position: absolute; top: 10px; left: 70px;' class='badge bg-dark'>/scan</span>
-        <img src="img/no_signal.png" class="p-1 bg-dark" alt="" id="video2" style='width: 100%;'/>
+        <span style='position: absolute; top: 10px; left: 70px;' class='badge bg-dark'>/map</span>
+        <!--<img src="img/no_signal.png" class="p-1 bg-dark" alt="" id="video2" style='width: 100%;'/>-->
+        <div id="map" style="width: 100%;"></div>
     </div>
   </div>
 
@@ -253,7 +292,6 @@
       <div class="progress" style='height: 10px; width: 100%; background-color: #222; margin-bottom: 20px;'>
         <div class="progress-bar bg-info" id='capacity' role="progressbar" style="width: 20%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
-      <button type="button" class="btn btn-outline-success" onclick="emergency_stop()">Resume</button>
       <button type="button" class="btn btn-outline-danger" onclick="emergency_stop()">Emergency Stop</button>
       <button type="button" class="btn btn-outline-warning" onclick="return_home()">Return to Home</button>
       <button type="button" class="btn btn-outline-info" onclick="view_metrics()">View Metrics</button>
