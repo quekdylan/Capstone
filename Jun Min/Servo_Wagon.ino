@@ -37,7 +37,7 @@ void loop() {
   Serial.print("cm"); 
   Serial.print("\n"); // (Till here) to see the distance between wagon's content and ultrasonic sensor
   delay(500);
-  servoLeft->writeServo(langle0); //setting the servo original position
+  servoLeft->writeServo(langle0); // setting the servo original position
   servoRight->writeServo(rangle0);
   delay(500);
 
