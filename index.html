@@ -30,8 +30,8 @@
   <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
   <script type="text/javascript" src="http://static.robotwebtools.org/EaselJS/current/easeljs.min.js"></script>
   <script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
-  <script src="https://static.robotwebtools.org/keyboardteleopjs/current/keyboardteleop.min.js"></script>
-  <script src="//yoannmoinet.github.io/nipplejs/javascripts/nipplejs.js"></script>
+  <!--<script src="https://static.robotwebtools.org/keyboardteleopjs/current/keyboardteleop.min.js"></script>-->
+  <!--<script src="//yoannmoinet.github.io/nipplejs/javascripts/nipplejs.js"></script>-->
   <script type="text/javascript" src="http://static.robotwebtools.org/ros2djs/current/ros2d.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -129,7 +129,6 @@
           video1.src = "http://" + robot_IP + ":8080/stream?topic=/camera/image_raw";
           video1.onload = function () {
             // onload
-            
           };
           // Create the main viewer.
           var viewer = new ROS2D.Viewer({
@@ -176,9 +175,6 @@
             document.getElementById('capacity').style.width = String(message.data) + "%";
             console.log('Received message on ' + wagon_capacity.name + ': ' + message.data);
           });
-
-
-
 
           // Subscribe to wagon contents
           var wagon_contents = new ROSLIB.Topic({
@@ -244,7 +240,7 @@
           <div>
               <div>
                 <button type="button" class="btn btn-info" id='connecting' disabled>
-                    <span class="sr-only">Conencting</span>
+                    <span class="sr-only">Connecting</span>
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 </button>
               </div>
@@ -304,15 +300,14 @@
     <!-- CAMERA -->
     <div style='width: 50%; position: relative;' id='body'>
         <span style='position: absolute; top: 10px; left: 10px;' class='badge bg-info'>CAMERA</span>
-        <span style='position: absolute; top: 10px; left: 88px;' class='badge bg-dark'>/camera</span>
+        <span style='position: absolute; top: 10px; left: 88px;' class='badge bg-dark'>/camera/image_raw</span>
         <img src="img/no_signal.png" class="p-1 bg-dark" alt="" id="video1" style='width: 100%;' />
     </div>
     <!-- LIDAR -->
     <div style='width: 50%; position: relative;'>
         <span style='position: absolute; top: 10px; left: 10px;' class='badge bg-info'>LIDAR</span>
         <span style='position: absolute; top: 10px; left: 70px;' class='badge bg-dark'>/map</span>
-        <img src="img/no_signal.png" class="p-1 bg-dark" alt="" id="video2" style='width: 100%;'/>-
-        <div id="map" style="width: 100%;"></div>
+        <div id="map" class="p-1 bg-dark" alt="" id="video2" style='width: 100%;'></div>
     </div>
   </div>
 
