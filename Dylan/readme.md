@@ -2,4 +2,4 @@
 Go to <a href="https://quekdylan.github.io/Capstone/">https://quekdylan.github.io/Capstone/</a>
 
 <h1>To view source code of website</h1>
-<span>Go to<a href="https://github.com/quekdylan/Capstone/tree/master">Master Branch</a></span>
+<span>Go to <a href="https://github.com/quekdylan/Capstone/tree/master">Master Branch</a></span>
